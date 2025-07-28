@@ -1,25 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sebihojda\Mbp\IO;
 
-use Sebihojda\Mbp\Core\DataTable;
-use Sebihojda\Mbp\Core\Row;
+use Sebihojda\Mbp\Model\DataTable;
 
-class CsvReader implements ReaderInterface
+/**
+ * Reads table data from a CSV stream to a DataTable
+ */
+final class CsvReader
 {
-    public function read($stream): DataTable
+    public static function read($inputStream, bool $ignoreHeaders = false): DataTable
     {
-        $dataTable = new DataTable();
-        $isHeader = true;
-
-        while (($data = fgetcsv($stream)) !== false) {
-            if ($isHeader) {
-                $dataTable->setHeader(new Row($data));
-                $isHeader = false;
-                continue;
-            }
-            $dataTable->addRow(new Row($data));
+        $data = [];
+        while (($row = fgetcsv($inputStream, null, ',', '"', '\\')) !== false) {
+            $data[] = $row;
         }
+
+        return DataTable::createFromArray($data, $ignoreHeaders);
+    }
+
+    public static function readClose(mixed $inputStream, bool $ignoreHeaders = false): DataTable
+    {
+        $dataTable = self::read($inputStream, $ignoreHeaders);
+        fclose($inputStream);
+
         return $dataTable;
     }
 }
