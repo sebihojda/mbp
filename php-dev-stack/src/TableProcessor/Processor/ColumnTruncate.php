@@ -2,34 +2,31 @@
 
 namespace Sebihojda\Mbp\TableProcessor\Processor;
 
-use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Sebihojda\Mbp\Model\DataTable;
 use Sebihojda\Mbp\Model\DataTableRow\DataRow;
 use Sebihojda\Mbp\Model\DataTableRow\HeaderRow;
-use Sebihojda\Mbp\TableProcessor\Config\OutputFormatConfig;
+use Sebihojda\Mbp\TableProcessor\Config\ColumnTruncateConfig;
 use Sebihojda\Mbp\TableProcessor\ConfigurableInterface;
 use Sebihojda\Mbp\TableProcessor\TableProcessorConfigInterface;
 use Sebihojda\Mbp\TableProcessor\TableProcessorInterface;
 
-class TableRowIndexer implements TableProcessorInterface, ConfigurableInterface
+class ColumnTruncate implements TableProcessorInterface, ConfigurableInterface
 {
-    private OutputFormatConfig $config;
+    private ColumnTruncateConfig $config;
 
-
-    /**
-     * @throws \Exception
-     */
     public function process(DataTable ...$tables): array
     {
+        $columnToTruncate = $this->config->getColumn(); // must verify/validate the column
+        $length = $this->config->getLength(); // must verify/validate the length
         $results = [];
         foreach ($tables as $table) {
-            $headers = $table->getHeaderRow()->withPrependColumn('index');
+            $headers = $table->getHeaderRow()->copy();
             $result = DataTable::createEmpty($headers);
             /** @var DataRow|HeaderRow $row */
             foreach ($table->getDataRowsIterator() as $i => $row) {
-                    $indexedRow = $row->withPrependColumn($i+1, $result);
-                    $result->appendRow($indexedRow);
+                $truncatedRow = $row->withColumnTruncate($columnToTruncate, $length);
+                $result->appendRow($truncatedRow);
             }
             $results[] = $result;
         }
@@ -39,7 +36,7 @@ class TableRowIndexer implements TableProcessorInterface, ConfigurableInterface
 
     public function configure(TableProcessorConfigInterface $config): static
     {
-        if (!$config instanceof OutputFormatConfig) {
+        if (!$config instanceof ColumnTruncateConfig) {
             throw new InvalidArgumentException('Invalid config type');
         }
         $this->config = $config;

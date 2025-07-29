@@ -2,34 +2,29 @@
 
 namespace Sebihojda\Mbp\TableProcessor\Processor;
 
-use Illuminate\Support\Arr;
-use InvalidArgumentException;
 use Sebihojda\Mbp\Model\DataTable;
 use Sebihojda\Mbp\Model\DataTableRow\DataRow;
 use Sebihojda\Mbp\Model\DataTableRow\HeaderRow;
-use Sebihojda\Mbp\TableProcessor\Config\OutputFormatConfig;
+use Sebihojda\Mbp\TableProcessor\Config\ColumnRemoveConfig;
 use Sebihojda\Mbp\TableProcessor\ConfigurableInterface;
 use Sebihojda\Mbp\TableProcessor\TableProcessorConfigInterface;
 use Sebihojda\Mbp\TableProcessor\TableProcessorInterface;
 
-class TableRowIndexer implements TableProcessorInterface, ConfigurableInterface
+class ColumnRemove implements TableProcessorInterface, ConfigurableInterface
 {
-    private OutputFormatConfig $config;
+    private ColumnRemoveConfig $config;
 
-
-    /**
-     * @throws \Exception
-     */
     public function process(DataTable ...$tables): array
     {
+        $columnToBeRemoved = $this->config->getColumn(); // must verify/validate the column/index
         $results = [];
         foreach ($tables as $table) {
-            $headers = $table->getHeaderRow()->withPrependColumn('index');
+            $headers = $table->getHeaderRow()->withRemovedColumn($columnToBeRemoved);
             $result = DataTable::createEmpty($headers);
             /** @var DataRow|HeaderRow $row */
             foreach ($table->getDataRowsIterator() as $i => $row) {
-                    $indexedRow = $row->withPrependColumn($i+1, $result);
-                    $result->appendRow($indexedRow);
+                $orderedRow = $row->withRemovedColumn($columnToBeRemoved);
+                $result->appendRow($orderedRow);
             }
             $results[] = $result;
         }
@@ -39,7 +34,7 @@ class TableRowIndexer implements TableProcessorInterface, ConfigurableInterface
 
     public function configure(TableProcessorConfigInterface $config): static
     {
-        if (!$config instanceof OutputFormatConfig) {
+        if (!$config instanceof ColumnRemoveConfig) {
             throw new InvalidArgumentException('Invalid config type');
         }
         $this->config = $config;

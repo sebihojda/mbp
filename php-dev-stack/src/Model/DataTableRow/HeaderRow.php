@@ -38,9 +38,29 @@ readonly class HeaderRow implements Countable, ArrayAccess
         return new static($this->row->copy(), $this->isDefault);
     }
 
-    public function isDefault(): bool
+    public function withAddedColumn(string $column): static
     {
-        return $this->isDefault;
+        $row = $this->row->copy();
+        $row->push($column);
+
+        return new static($row);
+    }
+
+    public function withRemovedColumn(string $column): static
+    {
+        $row = $this->row->copy();
+        $row->remove($row->find($column));
+
+        return new static($row);
+    }
+
+    public function withPrependColumn(string $headerRowValue): static
+    {
+        //$this->row->unshift($headerRowValue);   // WRONG!!! MODIFYING READONLY/IMMUTABLE OBJECT!!!
+        $row = $this->row->copy();
+        $row->unshift($headerRowValue);
+
+        return new static($row);
     }
 
     public function offsetExists(mixed $offset): bool
@@ -68,14 +88,13 @@ readonly class HeaderRow implements Countable, ArrayAccess
         return $this->row->count();
     }
 
+    public function isDefault(): bool
+    {
+        return $this->isDefault;
+    }
+
     public function toArray(): array
     {
         return $this->row->toArray();
-    }
-
-    public function prependHeaderColumn(string $headerRowValue): static
-    {
-        $this->row->unshift($headerRowValue);
-        return new static($this->row);
     }
 }

@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Sebihojda\Mbp\Command;
 
+use Sebihojda\Mbp\TableProcessor\Config\ColumnReorderConfig;
+use Sebihojda\Mbp\TableProcessor\Processor\ColumnRemove;
+use Sebihojda\Mbp\TableProcessor\Processor\ColumnReorder;
 use Sebihojda\Mbp\TableProcessor\Processor\ColumnSignatureVerifier;
 use Sebihojda\Mbp\TableProcessor\Processor\ColumnSigner;
+use Sebihojda\Mbp\TableProcessor\Processor\ColumnTruncate;
+use Sebihojda\Mbp\TableProcessor\Processor\DateReformat;
 use Sebihojda\Mbp\TableProcessor\Processor\TableHeaderPrepender;
 use Sebihojda\Mbp\TableProcessor\Processor\TableMerger;
 use Sebihojda\Mbp\TableProcessor\Processor\TableRowIndexer;
@@ -20,6 +25,10 @@ class CommandProcessorLocator
         'csv-headers-prepend'    => TableHeaderPrepender::class,
         'csv-merge'              => TableMerger::class,
         'csv-row-indexer'        => TableRowIndexer::class,
+        'csv-column-reorder'  => ColumnReorder::class,
+        'csv-column-remove'    => ColumnRemove::class,
+        'csv-column-truncate'  => ColumnTruncate::class,
+        'csv-date-reformat'     => DateReformat::class,
     ];
 
     private Map $processors;
